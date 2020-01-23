@@ -4,10 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "truffle run test",
+    "test": "truffle test",
     "compile": "truffle compile",
-    "deploy-rinkeby": "truffle run deploy --network rinkeby",
-    "deploy": "truffle run deploy"
+    "deploy-rinkeby": "truffle deploy --network rinkeby"
   },
   "keywords": [],
   "author": "",

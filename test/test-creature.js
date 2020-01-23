@@ -3,7 +3,6 @@ const Creature = artifacts.require("Creature");
 contract("Creature", accounts => {
   it("should have totalSupply of 0", () =>
   { 
-    console.log('accounts', accounts);
     return Creature.deployed()
         .then( instance => instance.totalSupply())
         .then(supply => {
