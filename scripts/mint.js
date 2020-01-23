@@ -1,18 +1,13 @@
-const HDWalletProvider = require("truffle-hdwallet-provider")
-const web3 = require('web3')
-const MNEMONIC = process.env.MNEMONIC
-const INFURA_KEY = process.env.INFURA_KEY
-const FACTORY_CONTRACT_ADDRESS = process.env.FACTORY_CONTRACT_ADDRESS
+const ethers = require('ethers')
 const NFT_CONTRACT_ADDRESS = process.env.NFT_CONTRACT_ADDRESS
 const OWNER_ADDRESS = process.env.OWNER_ADDRESS
+const PRIVATE_KEY = process.env.PRIVATE_KEY.startsWith('0x')? process.env.PRIVATE_KEY: '0x' + process.env.PRIVATE_KEY;
 const NETWORK = process.env.NETWORK
-const NUM_CREATURES = 12
-const NUM_LOOTBOXES = 4
-const DEFAULT_OPTION_ID = 0
-const LOOTBOX_OPTION_ID = 2
+const NUM_CREATURES = 1
 
-if (!MNEMONIC || !INFURA_KEY || !OWNER_ADDRESS || !NETWORK) {
-    console.error("Please set a mnemonic, infura key, owner, network, and contract address.")
+
+if (!PRIVATE_KEY || !OWNER_ADDRESS || !NETWORK) {
+    console.error("Please set a private key, owner, network, and contract address, see .env.sample")
     return
 }
 
@@ -51,34 +46,18 @@ const FACTORY_ABI = [{
 }]
 
 async function main() {
-    const provider = new HDWalletProvider(MNEMONIC, `https://${NETWORK}.infura.io/v3/${INFURA_KEY}`)
-    const web3Instance = new web3(
-        provider
-    )
+    const provider = ethers.providers.getDefaultProvider(NETWORK);
+    const wallet = new ethers.Wallet( PRIVATE_KEY, provider );
 
     if (NFT_CONTRACT_ADDRESS) {
-        const nftContract = new web3Instance.eth.Contract(NFT_ABI, NFT_CONTRACT_ADDRESS, { gasLimit: "1000000" })
-
+      const nftContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, wallet);
         // Creatures issued directly to the owner.
         for (var i = 0; i < NUM_CREATURES; i++) {
-            const result = await nftContract.methods.mintTo(OWNER_ADDRESS).send({ from: OWNER_ADDRESS });
-            console.log("Minted creature. Transaction: " + result.transactionHash)
-        }
-    } else if (FACTORY_CONTRACT_ADDRESS) {
-        const factoryContract = new web3Instance.eth.Contract(FACTORY_ABI, FACTORY_CONTRACT_ADDRESS, { gasLimit: "1000000" })
-
-        // Creatures issued directly to the owner.
-        for (var i = 0; i < NUM_CREATURES; i++) {
-            const result = await factoryContract.methods.mint(DEFAULT_OPTION_ID, OWNER_ADDRESS).send({ from: OWNER_ADDRESS });
-            console.log("Minted creature. Transaction: " + result.transactionHash)
-        }
-
-        // Lootboxes issued directly to the owner.
-        for (var i = 0; i < NUM_LOOTBOXES; i++) {
-            const result = await factoryContract.methods.mint(LOOTBOX_OPTION_ID, OWNER_ADDRESS).send({ from: OWNER_ADDRESS });
-            console.log("Minted lootbox. Transaction: " + result.transactionHash)
+            const result = await nftContract.mintTo(OWNER_ADDRESS);
+            console.log("Minted creature. Transaction: ", result.hash);
+            await result.wait(); // wait for transaction to be mined
         }
     }
-}
+  }
 
 main()
